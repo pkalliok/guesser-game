@@ -55,7 +55,7 @@ function repulse(p1, p2)
 	local xdiff = p1.x - p2.x
 	local ydiff = p1.y - p2.y
 	local dist_nz = xdiff * xdiff + ydiff * ydiff + 1
-	return {x = p1.x + 7 * xdiff / dist_nz, y = p1.y + 7 * ydiff / dist_nz}
+	return {x = xdiff / dist_nz, y = ydiff / dist_nz}
 end
 
 function merge_bang(t1, t2)
@@ -97,9 +97,18 @@ function avg_position(words)
 	return xsum / #locs, ysum / #locs
 end
 
+function vec_sum(p, diff)
+	return {x = p.x + diff.x, y = p.y + diff.y}
+end
+
+function vec_scale(p, scalar)
+	return {x = p.x * scalar, y = p.y * scalar}
+end
+
 function repulse_word(w, points)
-	local loc = reduce(repulse, w.loc, points)
-	return associate(w, 'loc', loc)
+	function rp_loc(point) return repulse(w.loc, point) end
+	local change = reduce(vec_sum, {x=0,y=0}, map(rp_loc, points))
+	return associate(w, 'loc', vec_sum(w.loc, vec_scale(change, 25)))
 end
 
 function repulse_words(words)
